@@ -2,3 +2,9 @@
 build/
 
 .vscode/
+
+schematics/launchpad-backups/
+
+schematics/fp-info-cache
+
+schematics/Connectors_JST.pretty-master/
