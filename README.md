@@ -6,7 +6,7 @@ MCU is ATmega2560.
 ## Features
 
 * Dual 3-axis joystick for rotation and translation
-* Linaer potentiometers for throttle
+* Linear potentiometers for throttle
 * SAS LED
 * RCS LED
 
