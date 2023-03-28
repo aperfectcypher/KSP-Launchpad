@@ -1,7 +1,7 @@
-# kspctrl
+# KSP-Launchpad
 ## THIS IS AN EARLY WORK IN PROGRESS
 
-Firmware for the KSPCTRL board.
+Firmware for the KSP-Launchpad board.
 MCU is ATmega2560.
 ## Features
 
