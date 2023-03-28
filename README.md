@@ -2,7 +2,8 @@
 ## THIS IS AN EARLY WORK IN PROGRESS
 
 Firmware for the KSP-Launchpad board.
-MCU is ATmega2560.
+
+MCU is an ATmega2560.
 ## Features
 
 * Dual 3-axis joystick for rotation and translation
