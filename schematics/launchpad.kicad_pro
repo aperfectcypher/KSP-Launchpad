@@ -121,7 +121,7 @@
         "min_hole_to_hole": 0.35,
         "min_microvia_diameter": 0.19999999999999998,
         "min_microvia_drill": 0.09999999999999999,
-        "min_resolved_spokes": 2,
+        "min_resolved_spokes": 1,
         "min_silk_clearance": 0.0,
         "min_text_height": 0.7999999999999999,
         "min_text_thickness": 0.08,
@@ -436,6 +436,7 @@
       "version": 3
     },
     "net_colors": {
+      "+5V": "rgb(255, 5, 28)",
       "/DG_CLK": "rgb(45, 255, 64)",
       "Net-(U1-QA)": "rgb(227, 253, 255)"
     },
