@@ -100,11 +100,11 @@
         )
       )
     )
-    (symbol "Connector:Conn_01x05_Female" (pin_names (offset 1.016) hide) (in_bom yes) (on_board yes)
+    (symbol "Connector:Conn_01x06_Socket" (pin_names (offset 1.016) hide) (in_bom yes) (on_board yes)
       (property "Reference" "J" (at 0 7.62 0)
         (effects (font (size 1.27 1.27)))
       )
-      (property "Value" "Conn_01x05_Female" (at 0 -7.62 0)
+      (property "Value" "Conn_01x06_Socket" (at 0 -10.16 0)
         (effects (font (size 1.27 1.27)))
       )
       (property "Footprint" "" (at 0 0 0)
@@ -113,21 +113,36 @@
       (property "Datasheet" "~" (at 0 0 0)
         (effects (font (size 1.27 1.27)) hide)
       )
+      (property "ki_locked" "" (at 0 0 0)
+        (effects (font (size 1.27 1.27)))
+      )
       (property "ki_keywords" "connector" (at 0 0 0)
         (effects (font (size 1.27 1.27)) hide)
       )
-      (property "ki_description" "Generic connector, single row, 01x05, script generated (kicad-library-utils/schlib/autogen/connector/)" (at 0 0 0)
+      (property "ki_description" "Generic connector, single row, 01x06, script generated" (at 0 0 0)
         (effects (font (size 1.27 1.27)) hide)
       )
       (property "ki_fp_filters" "Connector*:*_1x??_*" (at 0 0 0)
         (effects (font (size 1.27 1.27)) hide)
       )
-      (symbol "Conn_01x05_Female_1_1"
+      (symbol "Conn_01x06_Socket_1_1"
+        (arc (start 0 -7.112) (mid -0.5058 -7.62) (end 0 -8.128)
+          (stroke (width 0.1524) (type default))
+          (fill (type none))
+        )
         (arc (start 0 -4.572) (mid -0.5058 -5.08) (end 0 -5.588)
           (stroke (width 0.1524) (type default))
           (fill (type none))
         )
         (arc (start 0 -2.032) (mid -0.5058 -2.54) (end 0 -3.048)
+          (stroke (width 0.1524) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts
+            (xy -1.27 -7.62)
+            (xy -0.508 -7.62)
+          )
           (stroke (width 0.1524) (type default))
           (fill (type none))
         )
@@ -202,6 +217,10 @@
         (pin passive line (at -5.08 -5.08 0) (length 3.81)
           (name "Pin_5" (effects (font (size 1.27 1.27))))
           (number "5" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line (at -5.08 -7.62 0) (length 3.81)
+          (name "Pin_6" (effects (font (size 1.27 1.27))))
+          (number "6" (effects (font (size 1.27 1.27))))
         )
       )
     )
@@ -1072,6 +1091,9 @@
   (junction (at 46.99 52.705) (diameter 0) (color 0 0 0 0)
     (uuid 60ad964e-2619-4457-b12a-f53e608aa586)
   )
+  (junction (at 25.4 48.26) (diameter 0) (color 0 0 0 0)
+    (uuid 768c1145-3e14-491a-b7d9-d9a7e2de30e6)
+  )
   (junction (at 24.765 32.385) (diameter 0) (color 0 0 0 0)
     (uuid 8139b145-4c4c-4334-bd05-f48b0b4cc099)
   )
@@ -1103,7 +1125,7 @@
     (uuid fdd1fbbb-d311-4e36-9bba-a032f7bfc18a)
   )
 
-  (wire (pts (xy 25.4 45.72) (xy 25.4 52.705))
+  (wire (pts (xy 25.4 45.72) (xy 25.4 48.26))
     (stroke (width 0) (type default))
     (uuid 01bf08c5-717c-4040-9b0b-93ef6a6d47af)
   )
@@ -1459,6 +1481,10 @@
     (stroke (width 0) (type default))
     (uuid 61bd103b-d4ec-4ee5-b48d-f150a3165f5b)
   )
+  (wire (pts (xy 25.4 48.26) (xy 25.4 52.705))
+    (stroke (width 0) (type default))
+    (uuid 63d740d7-ae02-4c5b-9361-7bbc6cca992a)
+  )
   (wire (pts (xy 129.54 27.305) (xy 133.35 27.305))
     (stroke (width 0) (type default))
     (uuid 64eb12fa-588a-442c-93b9-6850a986a5e8)
@@ -1611,7 +1637,7 @@
     (stroke (width 0) (type default))
     (uuid 8857777d-cf9f-4f43-be01-40e89a8a4473)
   )
-  (wire (pts (xy 20.955 43.18) (xy 27.94 43.18))
+  (wire (pts (xy 20.32 43.18) (xy 27.94 43.18))
     (stroke (width 0) (type default))
     (uuid 8a6902ce-685b-452c-aebf-11655f90067a)
   )
@@ -1719,7 +1745,7 @@
     (stroke (width 0) (type default))
     (uuid a78983be-b4e7-442b-8b9c-b483a3e984e7)
   )
-  (wire (pts (xy 20.955 45.72) (xy 25.4 45.72))
+  (wire (pts (xy 20.32 45.72) (xy 25.4 45.72))
     (stroke (width 0) (type default))
     (uuid a8898349-e8b1-450a-a21a-b8a95f9a5530)
   )
@@ -1771,10 +1797,6 @@
     (stroke (width 0) (type default))
     (uuid b903dbd2-1716-4144-afa2-840c9356ba22)
   )
-  (wire (pts (xy 20.955 35.56) (xy 24.765 35.56))
-    (stroke (width 0) (type default))
-    (uuid badbd8d1-a72b-4602-9046-035fc91040f4)
-  )
   (wire (pts (xy 113.03 37.465) (xy 113.03 50.165))
     (stroke (width 0) (type default))
     (uuid baee2666-c425-48ee-9b3b-bc28abe04c8b)
@@ -1823,7 +1845,7 @@
     (stroke (width 0) (type default))
     (uuid c542e58a-177e-416e-8086-b51293df6c6e)
   )
-  (wire (pts (xy 20.955 38.1) (xy 29.845 38.1))
+  (wire (pts (xy 20.32 38.1) (xy 29.845 38.1))
     (stroke (width 0) (type default))
     (uuid c5b7c7f7-e3e9-4c17-8793-d236aebb5bc6)
   )
@@ -1843,7 +1865,7 @@
     (stroke (width 0) (type default))
     (uuid ca70e002-4243-41a1-b590-e8fb413bc3c2)
   )
-  (wire (pts (xy 20.955 40.64) (xy 29.845 40.64))
+  (wire (pts (xy 20.32 40.64) (xy 29.845 40.64))
     (stroke (width 0) (type default))
     (uuid ca83576b-47a3-45a3-9150-9d678025c4f2)
   )
@@ -1854,6 +1876,10 @@
   (wire (pts (xy 67.945 87.63) (xy 73.66 87.63))
     (stroke (width 0) (type default))
     (uuid ccb06ecc-a339-4a7a-8be5-144f02be47c9)
+  )
+  (wire (pts (xy 20.32 48.26) (xy 25.4 48.26))
+    (stroke (width 0) (type default))
+    (uuid ce252ea4-70f6-4826-b48e-3740a5c4cf16)
   )
   (wire (pts (xy 72.39 140.335) (xy 72.39 107.95))
     (stroke (width 0) (type default))
@@ -1882,6 +1908,10 @@
   (wire (pts (xy 159.385 95.25) (xy 161.29 95.25))
     (stroke (width 0) (type default))
     (uuid d51930f1-3c8b-4ba9-ac5d-3509734a18e1)
+  )
+  (wire (pts (xy 20.32 35.56) (xy 24.765 35.56))
+    (stroke (width 0) (type default))
+    (uuid d6e492c8-5b10-491a-a0aa-75b12c1637d8)
   )
   (wire (pts (xy 67.945 90.17) (xy 76.2 90.17))
     (stroke (width 0) (type default))
@@ -2058,7 +2088,7 @@
     )
     (pin "1" (uuid 9664c44f-7002-4e2d-8ba7-7dbaed0a691b))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0116") (unit 1)
         )
@@ -2083,7 +2113,7 @@
     )
     (pin "1" (uuid ce6d67f5-5046-42b6-9f15-ce681c9ea9a1))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0108") (unit 1)
         )
@@ -2108,7 +2138,7 @@
     )
     (pin "1" (uuid 70dfdb04-e92f-4662-bb75-ef04c1257e59))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0110") (unit 1)
         )
@@ -2133,7 +2163,7 @@
     )
     (pin "1" (uuid 51580e6c-dcef-45cb-b4b6-4e90945b7d35))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0113") (unit 1)
         )
@@ -2168,7 +2198,7 @@
     (pin "8" (uuid c007c777-a828-4bd5-9463-1fe2490370e2))
     (pin "9" (uuid 017bef57-256d-4738-9a57-ae62758f3c37))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "RN4") (unit 1)
         )
@@ -2208,7 +2238,7 @@
     (pin "8" (uuid 401213b2-6331-4138-90b5-6b30392bc566))
     (pin "9" (uuid 386eec05-e354-4153-bef4-6cd339d32fe9))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "U5") (unit 1)
         )
@@ -2252,7 +2282,7 @@
     (pin "8" (uuid fff50739-4402-4ac5-b554-6e6db2d57d4d))
     (pin "9" (uuid a4be27cd-7ebd-41e4-af4e-e16369758223))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "BAR2") (unit 1)
         )
@@ -2277,7 +2307,7 @@
     )
     (pin "1" (uuid 6428bd1d-69e4-4fe4-add3-db28baa7bf63))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0115") (unit 1)
         )
@@ -2302,7 +2332,7 @@
     )
     (pin "1" (uuid 20587dde-ed94-4d9b-a92d-30c8b6169164))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0102") (unit 1)
         )
@@ -2311,12 +2341,12 @@
   )
 
   (symbol (lib_id "power:GND") (at 25.4 55.88 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+    (in_bom yes) (on_board yes) (dnp no)
     (uuid 55821d73-7873-4b2c-8928-2581a86d1e9b)
     (property "Reference" "#PWR0111" (at 25.4 62.23 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Value" "GND" (at 25.4 60.325 0)
+    (property "Value" "GND" (at 29.21 58.42 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Footprint" "" (at 25.4 55.88 0)
@@ -2327,7 +2357,7 @@
     )
     (pin "1" (uuid 18b3495b-2bf7-42a5-95d3-022a82b6b14a))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0111") (unit 1)
         )
@@ -2356,7 +2386,7 @@
     (pin "1" (uuid fff0353e-6b71-456e-9d88-3be7c051a240))
     (pin "2" (uuid 1b018cbf-2303-4cc2-a277-ed1fef9d0e15))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "C1") (unit 1)
         )
@@ -2385,7 +2415,7 @@
     (pin "1" (uuid 5eb008e0-732f-42aa-8c7e-f7d9cc80759e))
     (pin "2" (uuid 3c59f399-63ec-4523-b643-86bff9e803b8))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "C3") (unit 1)
         )
@@ -2420,7 +2450,7 @@
     (pin "8" (uuid 24388a91-35ee-4e4d-8106-0f0b3d0ed22b))
     (pin "9" (uuid ceb5fd2a-3be8-4f02-aba0-0c66a0e5cf03))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "RN3") (unit 1)
         )
@@ -2445,7 +2475,7 @@
     )
     (pin "1" (uuid 1bef80d2-f795-4267-979c-6c4aaa211a68))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0103") (unit 1)
         )
@@ -2470,7 +2500,7 @@
     )
     (pin "1" (uuid 7b6a7ccd-bd09-40d0-8415-03631824ead2))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0118") (unit 1)
         )
@@ -2495,9 +2525,39 @@
     )
     (pin "1" (uuid 714a8216-3490-437a-970d-cb134f4752de))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0117") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "Connector:Conn_01x06_Socket") (at 15.24 43.18 180) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid 623c4ed2-3c9b-4631-a374-f6cebee91f1e)
+    (property "Reference" "J1" (at 17.78 31.75 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Value" "Conn_01x06_Socket" (at 13.97 41.91 90)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "Connector_JST:JST_PH_B6B-PH-K_1x06_P2.00mm_Vertical" (at 15.24 43.18 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (at 15.24 43.18 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid f2a52d3c-b3a2-459f-ba72-f033f927e902))
+    (pin "2" (uuid 590d0c0c-fea9-46b3-9738-1d77c6b2375a))
+    (pin "3" (uuid 7917da3c-57a9-4c37-8d0f-cb9c487c1662))
+    (pin "4" (uuid 423583dd-3a98-4254-b0d7-ec5186313997))
+    (pin "5" (uuid 11922d37-4a56-4805-8e90-f260b855b5ec))
+    (pin "6" (uuid f6b8dbdf-3724-45fc-8374-713f97d2de21))
+    (instances
+      (project "dgauges"
+        (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
+          (reference "J1") (unit 1)
         )
       )
     )
@@ -2520,7 +2580,7 @@
     )
     (pin "1" (uuid 4f73b10b-4bfd-4c14-806e-fa9dfffe9342))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0112") (unit 1)
         )
@@ -2545,7 +2605,7 @@
     )
     (pin "1" (uuid 55e061d8-4853-4882-aa1c-d234ec033d8c))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0101") (unit 1)
         )
@@ -2570,7 +2630,7 @@
     )
     (pin "1" (uuid 8d59dc9d-2caa-4d42-af00-676c94af8253))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0119") (unit 1)
         )
@@ -2614,38 +2674,9 @@
     (pin "8" (uuid af05fc42-fc04-48c4-aa1f-bb1f2ca1613c))
     (pin "9" (uuid a831ae1b-31fe-4594-87a2-33674bbd8c0d))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "BAR1") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "Connector:Conn_01x05_Female") (at 15.875 40.64 0) (mirror y) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid 7c1939b6-aa0a-4144-bb46-b73247b62d9d)
-    (property "Reference" "J1" (at 19.685 47.625 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Value" "Conn_01x05_Female" (at 13.97 49.53 90)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "Connectors_JST:JST_EH_B05B-EH-A_05x2.50mm_Straight" (at 15.875 40.64 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "~" (at 15.875 40.64 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid d3904fa2-7d17-4e72-98ed-7f020d06147e))
-    (pin "2" (uuid e814959f-8f23-45f0-abfd-fef0cc5fe209))
-    (pin "3" (uuid fdbb0317-0a91-4c35-a9ee-f23aa0b82d57))
-    (pin "4" (uuid bf26181e-366f-4837-b391-6bdc27dadfcd))
-    (pin "5" (uuid b755df17-51cd-4a21-a400-9fefe0572621))
-    (instances
-      (project "launchpad"
-        (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
-          (reference "J1") (unit 1)
         )
       )
     )
@@ -2672,7 +2703,7 @@
     (pin "1" (uuid 1493e875-38c8-480b-851a-b058e0a57af3))
     (pin "2" (uuid 830744ae-9a02-446f-ac25-72e03b7defad))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "C4") (unit 1)
         )
@@ -2697,7 +2728,7 @@
     )
     (pin "1" (uuid 328d429d-a762-404a-947d-7dc346fbbbbe))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0106") (unit 1)
         )
@@ -2737,7 +2768,7 @@
     (pin "8" (uuid d5926ae5-e972-4dcc-8335-d8bd16db6dbc))
     (pin "9" (uuid 142e2caa-2b2c-4696-83a8-bdbb5b82c7f7))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "U1") (unit 1)
         )
@@ -2762,7 +2793,7 @@
     )
     (pin "1" (uuid 635e433c-e9ca-4e1b-b581-e8d5800a09ec))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0109") (unit 1)
         )
@@ -2787,7 +2818,7 @@
     )
     (pin "1" (uuid 7956987d-256e-4297-ab39-2e6ac44629bc))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0104") (unit 1)
         )
@@ -2812,7 +2843,7 @@
     )
     (pin "1" (uuid 756e6860-c6a3-4335-8fa6-6846c1eecc45))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0114") (unit 1)
         )
@@ -2847,7 +2878,7 @@
     (pin "8" (uuid 88a9327b-8503-495b-9ceb-b27a1f4e2f1e))
     (pin "9" (uuid 84f9b9d6-c3eb-442a-8deb-c292455f43f4))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "RN1") (unit 1)
         )
@@ -2887,7 +2918,7 @@
     (pin "8" (uuid d79142fe-8cfb-4fff-9c7c-cf03167ec997))
     (pin "9" (uuid 28439d3b-a990-4391-9b27-af554e7248b3))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "U4") (unit 1)
         )
@@ -2916,7 +2947,7 @@
     (pin "1" (uuid 08558469-611e-453a-911c-61cf4d3b191a))
     (pin "2" (uuid 26f43ab6-33ba-499e-a166-54e178ce04f0))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "C5") (unit 1)
         )
@@ -2941,7 +2972,7 @@
     )
     (pin "1" (uuid 3c25250f-21f5-4845-b8cf-e3e4753eadac))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0107") (unit 1)
         )
@@ -2970,7 +3001,7 @@
     (pin "1" (uuid 65b9c339-f7d9-464a-8355-008a9709e291))
     (pin "2" (uuid 1f3be259-2b20-447f-bb94-06e7eccf34ad))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "C2") (unit 1)
         )
@@ -3010,7 +3041,7 @@
     (pin "8" (uuid b7e0373e-df68-4c93-beee-baa5b417ab4c))
     (pin "9" (uuid 51cf9155-5cbf-44eb-a7c5-327615922a8e))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "U2") (unit 1)
         )
@@ -3035,7 +3066,7 @@
     )
     (pin "1" (uuid a45d815e-6d6f-4c36-86c8-7cb026c5d80a))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "#PWR0105") (unit 1)
         )
@@ -3079,7 +3110,7 @@
     (pin "8" (uuid df20b510-0dfd-4c45-ba29-d413d85f66e2))
     (pin "9" (uuid 37ea5d26-5b82-4861-af3b-ea201a474f61))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "BAR4") (unit 1)
         )
@@ -3123,7 +3154,7 @@
     (pin "8" (uuid 7b7c240b-7137-40e2-bccb-d1d7a4e54bda))
     (pin "9" (uuid cd9487f3-1d85-4e92-a969-72141b6b581f))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "BAR3") (unit 1)
         )
@@ -3163,7 +3194,7 @@
     (pin "8" (uuid 3cca6b35-d1e5-485d-8a62-afa62c04567a))
     (pin "9" (uuid 19ee8379-bb46-4908-8952-e4ec7a89740f))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "U3") (unit 1)
         )
@@ -3198,7 +3229,7 @@
     (pin "8" (uuid b0dfd20e-22a9-4c25-937f-b9ca4da98d5e))
     (pin "9" (uuid 6188c565-c3ee-445a-a748-59c5507338b3))
     (instances
-      (project "launchpad"
+      (project "dgauges"
         (path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
           (reference "RN2") (unit 1)
         )
