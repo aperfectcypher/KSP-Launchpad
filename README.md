@@ -15,7 +15,7 @@ MCU is an ATmega2560.
 ## Schematics
 
 The schematics are written using kicad.
-The schematic is available in the `schematics` directory.
+The schematics are available in the `schematics` directory.
 
 ## License
 
