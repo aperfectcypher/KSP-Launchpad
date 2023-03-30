@@ -16,3 +16,11 @@ schematics/mainboard/mainboard-backups/
 schematics/mainboard/fp-info-cache
 
 schematics/mainboard/#auto_saved_files#
+
+schematics/mainboard-backups/
+
+schematics/dgauges/#auto_saved_files#
+
+schematics/dgauges/dgauges-backups/
+
+schematics/dgauges/fp-info-cache
