@@ -10,6 +10,7 @@ MCU is an ATmega2560.
 * Linear potentiometers for throttle
 * SAS LED
 * RCS LED
+* LED bars as ship ressources gauges
 
 ## Schematics
 
