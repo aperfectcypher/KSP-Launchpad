@@ -19,8 +19,8 @@ The schematics are available in the `schematics` directory.
 
 ## License
 
-The firmware and schematics are licensed under the MIT license.
+The firmware and schematics are licensed under the Unlicense license.
 
 ## Author
 
-This firmware was written by Thomas Langohr <tlangohr@gmail.com>
+[Aperfectcypher](https://github.com/aperfectcypher)
