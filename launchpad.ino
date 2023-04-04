@@ -9,6 +9,7 @@
 #define JOY_X_PIN         PIN_A1
 #define JOY_Y_PIN         PIN_A2
 #define JOY_Z_PIN         PIN_A3
+#define JOY_PB_PIN        5
 // -------------------------------
 
 #define DGAUGES_LATCH_PIN 8
