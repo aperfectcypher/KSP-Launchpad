@@ -4,12 +4,19 @@
 // -----------Pins----------------
 #define RCS_LED_PIN       30
 #define SAS_LED_PIN       31
-#define THROTTLE_PIN      PIN_A0
+#define THROTTLE_PIN      PIN_A7
 
-#define JOY_X_PIN         PIN_A1
-#define JOY_Y_PIN         PIN_A2
-#define JOY_Z_PIN         PIN_A3
-#define JOY_PB_PIN        5
+// Joystick 1
+#define JOY1_X_PIN         PIN_A1
+#define JOY1_Y_PIN         PIN_A2
+#define JOY1_Z_PIN         PIN_A3
+#define JOY1_PB_PIN        5
+
+// Joystick 2
+#define JOY2_X_PIN         PIN_A4
+#define JOY2_Y_PIN         PIN_A5
+#define JOY2_Z_PIN         PIN_A6
+#define JOY2_PB_PIN        6
 // -------------------------------
 
 #define DGAUGES_LATCH_PIN 8
@@ -99,9 +106,9 @@ void joystickManagement()
 
   // Read the joystick position from the potentiometers.
   // Rotation joystick
-  int joyXRead = analogRead(JOY_X_PIN);
-  int joyYRead = analogRead(JOY_Y_PIN);
-  int joyZRead = analogRead(JOY_Z_PIN);
+  int joyXRead = analogRead(JOY1_X_PIN);
+  int joyYRead = analogRead(JOY1_Y_PIN);
+  int joyZRead = analogRead(JOY1_Z_PIN);
 
   // Scale the joystick values to the range of a signed 16-bit integer and
   // apply a deadzone.
