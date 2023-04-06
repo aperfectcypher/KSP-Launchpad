@@ -1,5 +1,9 @@
 #include "KerbalSimpit.h"
 #include <SPI.h>
+#include <U8g2lib.h>
+
+#define dword uint32_t
+#define sdword int32_t
 
 // -----------Pins----------------
 // LEDs
@@ -40,15 +44,27 @@
 // communicate using the "Serial" device.
 KerbalSimpit simpitClient(Serial);
 
+// LCD Display (Hardware SPI, CS=5, A0=7)
+U8G2_ST7565_NHD_C12832_F_4W_HW_SPI u8g2(U8G2_R2, 5, 7);
+
 // Create a SPI settings object for the digital gauges
 SPISettings dgaugesSpi(10000000UL, MSBFIRST, SPI_MODE0);
+
+// ---- Globals ----
 // Ship fuel tanks in percent
 byte shipFuelPercent_ba[NB_DGAUGES] = {0};
+// Ship apsides
+apsidesMessage shipApsides_s;
+byte apsidesChanged_b = 0;
+// -----------------
+
 
 void setup()
 {
   // Open the serial connection.
   Serial.begin(115200);
+
+  // ---- IO initialization ----
 
   // Set up the build in LED, and turn it on.
   pinMode(LED_BUILTIN, OUTPUT);
@@ -66,9 +82,20 @@ void setup()
   // Setup SPI for the digital gauges
   SPI.begin();
   SPI.beginTransaction(dgaugesSpi);
+  // ----------------------------
 
-  // Subsystems initialization
+
+  // ---- Subsystems initialization ----
+  
+  // Digital gauges
   dGaugesManagement();
+
+  // LCD Display
+  u8g2.begin();
+  // ----------------------------------
+
+
+  // ---- KerbalSimpit initialization ----
 
   // This loop continually attempts to handshake with the plugin.
   // It will keep retrying until it gets a successful handshake.
@@ -81,7 +108,7 @@ void setup()
   digitalWrite(LED_BUILTIN, LOW);
 
   // Display a message in KSP to indicate handshaking is complete.
-  simpitClient.printToKSP("Connected", PRINT_TO_SCREEN);
+  simpitClient.printToKSP("Launchpad connected", PRINT_TO_SCREEN);
 
   // Sets our callback function. The KerbalSimpit library will
   // call this function every time a packet is received.
@@ -93,6 +120,10 @@ void setup()
 
   // Register Oxidizer channel.
   simpitClient.registerChannel(OX_MESSAGE);
+
+  // Register Apoapsis / Periapsis channel.
+  simpitClient.registerChannel(APSIDES_MESSAGE);
+  // -------------------------------------
 }
 
 void loop()
@@ -103,7 +134,8 @@ void loop()
   // subsystems management
   //joystickManagement();
   //throttleManagement();
-  dGaugesManagement();
+  //dGaugesManagement();
+  lcdDisplayManagement();
 }
 
 void joystickManagement()
@@ -229,6 +261,36 @@ void dGaugesManagement()
   dGaugeMgmtCallCount++;
 }
 
+void lcdDisplayManagement(void)
+{
+  char lcdLine1_ba[16] = {0};
+  char lcdLine2_ba[16] = {0};
+
+  if(apsidesChanged_b)
+  {
+    lcdLine1_ba[0] = 'A';
+    lcdLine1_ba[1] = ':';
+
+    lcdLine2_ba[0] = 'P';
+    lcdLine2_ba[1] = ':';
+
+    String apoapsis_s = String(shipApsides_s.apoapsis);
+    String periapsis_s = String(shipApsides_s.periapsis);
+
+    apoapsis_s.toCharArray(lcdLine1_ba + 2, 14);
+    periapsis_s.toCharArray(lcdLine2_ba + 2, 14);
+    
+    do
+    {
+      u8g2.setFont(u8g2_font_8x13_mf);
+
+      u8g2.drawStr(0, 13, lcdLine1_ba);
+      u8g2.drawStr(0, 30, lcdLine2_ba);
+    } while (u8g2.nextPage());
+    apsidesChanged_b = false;
+  }
+}
+
 void messageHandler(byte messageType, byte msg[], byte msgSize)
 {
   switch (messageType)
@@ -254,15 +316,26 @@ void messageHandler(byte messageType, byte msg[], byte msgSize)
     }
     break;
     case OX_MESSAGE:
-    // Checking if the message is the size we expect is a very basic
-    // way to confirm if the message was received properly.
-    if (msgSize == sizeof(resourceMessage))
-    {
-      // Create a new SASInfoMessage struct
-      resourceMessage oxInfo;
-      // Convert the message we received to an resourceMessage struct.
-      oxInfo = parseMessage<resourceMessage>(msg);
-      shipFuelPercent_ba[DGAUGES_OX] = (byte)map(oxInfo.available, 0, oxInfo.total, 0, 100);
-    }
+      // Checking if the message is the size we expect is a very basic
+      // way to confirm if the message was received properly.
+      if (msgSize == sizeof(resourceMessage))
+      {
+        // Create a new SASInfoMessage struct
+        resourceMessage oxInfo;
+        // Convert the message we received to an resourceMessage struct.
+        oxInfo = parseMessage<resourceMessage>(msg);
+        shipFuelPercent_ba[DGAUGES_OX] = (byte)map(oxInfo.available, 0, oxInfo.total, 0, 100);
+      }
+      break;
+    case APSIDES_MESSAGE:
+      // Checking if the message is the size we expect is a very basic
+      // way to confirm if the message was received properly.
+      if (msgSize == sizeof(apsidesMessage))
+      {
+        // Convert the message we received to an apsidesMessage struct.
+        shipApsides_s = parseMessage<apsidesMessage>(msg);
+        apsidesChanged_b = true;
+      }
+      break;
   }
 }
