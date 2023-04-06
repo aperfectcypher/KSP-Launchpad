@@ -2,9 +2,12 @@
 #include <SPI.h>
 
 // -----------Pins----------------
+// LEDs
 #define RCS_LED_PIN       30
 #define SAS_LED_PIN       31
-#define THROTTLE_PIN      PIN_A7
+
+// Throttle
+#define THROTTLE_PIN       PIN_A7
 
 // Joystick 1
 #define JOY1_X_PIN         PIN_A1
@@ -17,9 +20,12 @@
 #define JOY2_Y_PIN         PIN_A5
 #define JOY2_Z_PIN         PIN_A6
 #define JOY2_PB_PIN        6
-// -------------------------------
 
+// Digital gauges
 #define DGAUGES_LATCH_PIN 8
+//      DGAUGES_DATA_PIN   21 /* DATA/CLK = ATmega2560 SPI */
+//      DGAUGES_CLOCK_PIN  20
+// -------------------------------
 
 // -----------Settings-----------
 // Joystick
