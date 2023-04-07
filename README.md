@@ -11,6 +11,7 @@ MCU is an ATmega2560.
 * SAS LED
 * RCS LED
 * LED bars as ship ressources gauges
+* LCD screen (128x32px) for ship status
 
 ## Schematics
 
