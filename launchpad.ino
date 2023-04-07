@@ -5,14 +5,21 @@
 // ============Defines============
 
 // Types
-#define dword uint32_t
-#define sdword int32_t
+typedef uint32_t dword;
+typedef int32_t sdword;
+typedef uint16_t word;
+typedef int16_t sword;
+typedef uint8_t byte;
+typedef int8_t sbyte;
 
 // LCD display modes
-#define NB_LCD_DISPLAY_MODES     3
-#define LCD_DISPLAY_MODE_IDLE    0
-#define LCD_DISPLAY_MODE_APSIDES 1
-#define LCD_DISPLAY_MODE_ALT     2
+#define NB_LCD_DISPLAY_MODES          2
+
+#define LCD_DISPLAY_MODE_IDLE         -1
+#define LCD_DISPLAY_MODE_CONNECTED    -2
+
+#define LCD_DISPLAY_MODE_APSIDES      0
+#define LCD_DISPLAY_MODE_ALT          1
 
 
 // -----------Pins----------------
@@ -71,7 +78,7 @@ SPISettings dgaugesSpi(10000000UL, MSBFIRST, SPI_MODE0);
 // Ship fuel tanks in percent
 byte shipFuelPercent_ba[NB_DGAUGES] = {0};
 // LCD display mode
-byte lcdDisplayMode_b = LCD_DISPLAY_MODE_APSIDES;
+sbyte lcdDisplayMode_sb = LCD_DISPLAY_MODE_IDLE;
 byte lcdDisplayModeChanged_b = 0;
 // Ship apsides
 apsidesMessage previousApsides_s;
@@ -125,6 +132,7 @@ void setup()
   previousApsides_s.apoapsis = 0;
   attachInterrupt(digitalPinToInterrupt(LCD_DISPLAY_MODE_UP_PIN), lcdDisplayModeUp, FALLING);
   attachInterrupt(digitalPinToInterrupt(LCD_DISPLAY_MODE_DOWN_PIN), lcdDisplayModeDown, FALLING);
+  lcdDisplayManagement();
   // ----------------------------------
 
 
@@ -136,6 +144,10 @@ void setup()
   {
     delay(100);
   }
+  // Display a message on the LCD display to indicate handshaking is complete.
+  lcdDisplayMode_sb = LCD_DISPLAY_MODE_CONNECTED;
+  lcdDisplayModeChanged_b = 1;
+  lcdDisplayManagement();
 
   // Turn off the built-in LED to indicate handshaking is complete.
   digitalWrite(LED_BUILTIN, LOW);
@@ -312,17 +324,32 @@ void lcdDisplayManagement(void)
     lcdDisplayModeChanged_b = 0;
   }
 
-  switch (lcdDisplayMode_b)
+  switch (lcdDisplayMode_sb)
   {
   case LCD_DISPLAY_MODE_IDLE:
     do
     {
       sprintf(lcdLine1_ba, "KSP Launchpad");
+      sprintf(lcdLine2_ba, "Disconnected");
       u8g2.setFont(u8g2_font_9x18_tf);
-      u8g2.drawStr(0, 22, lcdLine1_ba);
+      u8g2.drawStr(0, 18, lcdLine1_ba);
+      u8g2.setFont(u8g2_font_7x13_tf);
+      u8g2.drawStr(20, 31, lcdLine2_ba);
     } while (u8g2.nextPage());
     break;
-  
+
+  case LCD_DISPLAY_MODE_CONNECTED:
+    do
+    {
+      sprintf(lcdLine1_ba, "KSP Launchpad");
+      sprintf(lcdLine2_ba, "Connected");
+      u8g2.setFont(u8g2_font_9x18_tf);
+      u8g2.drawStr(0, 18, lcdLine1_ba);
+      u8g2.setFont(u8g2_font_7x13_tf);
+      u8g2.drawStr(20, 31, lcdLine2_ba);
+    } while (u8g2.nextPage());
+    break;
+
   case LCD_DISPLAY_MODE_APSIDES:
     if (apsidesChanged_b)
     {
@@ -537,17 +564,17 @@ void lcdDisplayModeUp(void)
   {
   
     last_interrupt_time = interrupt_time;
-    lcdDisplayMode_b++;
-    if (lcdDisplayMode_b > NB_LCD_DISPLAY_MODES - 1)
+    lcdDisplayMode_sb++;
+    if (lcdDisplayMode_sb > NB_LCD_DISPLAY_MODES - 1)
     {
-      lcdDisplayMode_b = 0;
+      lcdDisplayMode_sb = 0;
     }
-    if(lcdDisplayMode_b == LCD_DISPLAY_MODE_APSIDES)
+    if(lcdDisplayMode_sb == LCD_DISPLAY_MODE_APSIDES)
     {
       apsidesChanged_b = true;
     }
 
-    if (lcdDisplayMode_b == LCD_DISPLAY_MODE_ALT)
+    if (lcdDisplayMode_sb == LCD_DISPLAY_MODE_ALT)
     {
       altitudeChanged_b = true;
     }
@@ -563,21 +590,21 @@ void lcdDisplayModeDown(void)
   // debounce
   if(interrupt_time - last_interrupt_time > 350)
   {
-    if (lcdDisplayMode_b == 0)
+    if (lcdDisplayMode_sb == 0)
     {
-      lcdDisplayMode_b = NB_LCD_DISPLAY_MODES - 1;
+      lcdDisplayMode_sb = NB_LCD_DISPLAY_MODES - 1;
     }
     else
     {
-      lcdDisplayMode_b--;
+      lcdDisplayMode_sb--;
     }
 
-    if (lcdDisplayMode_b == LCD_DISPLAY_MODE_APSIDES)
+    if (lcdDisplayMode_sb == LCD_DISPLAY_MODE_APSIDES)
     {
       apsidesChanged_b = true;
     }
 
-    if(lcdDisplayMode_b == LCD_DISPLAY_MODE_ALT)
+    if(lcdDisplayMode_sb == LCD_DISPLAY_MODE_ALT)
     {
       altitudeChanged_b = true;
     }
