@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "NHD-C12832A1Z-eagle-import")(type "KiCad")(uri "${KIPRJMOD}/library/NHD-C12832A1Z-eagle-import.kicad_sym")(options "")(descr ""))
+)

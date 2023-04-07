@@ -1,5 +1,26 @@
 #include "KerbalSimpit.h"
 #include <SPI.h>
+#include <U8g2lib.h>
+
+// ============Defines============
+
+// Types
+typedef uint32_t dword;
+typedef int32_t sdword;
+typedef uint16_t word;
+typedef int16_t sword;
+typedef uint8_t byte;
+typedef int8_t sbyte;
+
+// LCD display modes
+#define NB_LCD_DISPLAY_MODES          2
+
+#define LCD_DISPLAY_MODE_IDLE         -1
+#define LCD_DISPLAY_MODE_CONNECTED    -2
+
+#define LCD_DISPLAY_MODE_APSIDES      0
+#define LCD_DISPLAY_MODE_ALT          1
+
 
 // -----------Pins----------------
 // LEDs
@@ -25,7 +46,14 @@
 #define DGAUGES_LATCH_PIN 8
 //      DGAUGES_DATA_PIN   21 /* DATA/CLK = ATmega2560 SPI */
 //      DGAUGES_CLOCK_PIN  20
+
+// LCD Display
+#define LCD_DISPLAY_CS_PIN          5
+#define LCD_DISPLAY_A0_PIN          7
+#define LCD_DISPLAY_MODE_UP_PIN     2
+#define LCD_DISPLAY_MODE_DOWN_PIN   3
 // -------------------------------
+
 
 // -----------Settings-----------
 // Joystick
@@ -40,15 +68,37 @@
 // communicate using the "Serial" device.
 KerbalSimpit simpitClient(Serial);
 
+// LCD Display (Hardware SPI, CS=5, A0=7)
+U8G2_ST7565_NHD_C12832_F_4W_HW_SPI u8g2(U8G2_R2, LCD_DISPLAY_CS_PIN, LCD_DISPLAY_A0_PIN);
+
 // Create a SPI settings object for the digital gauges
 SPISettings dgaugesSpi(10000000UL, MSBFIRST, SPI_MODE0);
+
+// ---- Globals ----
 // Ship fuel tanks in percent
 byte shipFuelPercent_ba[NB_DGAUGES] = {0};
+// LCD display mode
+sbyte lcdDisplayMode_sb = LCD_DISPLAY_MODE_IDLE;
+byte lcdDisplayModeChanged_b = 0;
+// Ship apsides
+apsidesMessage previousApsides_s;
+byte apsidesChanged_b = 0;
+String periapsis_s;
+String apoapsis_s;
+// Ship altitude
+altitudeMessage previousAltitude_s;
+byte altitudeChanged_b = 0;
+String alt_sea_s;
+String alt_sur_s;
+// -----------------
+
 
 void setup()
 {
   // Open the serial connection.
   Serial.begin(115200);
+
+  // ---- IO initialization ----
 
   // Set up the build in LED, and turn it on.
   pinMode(LED_BUILTIN, OUTPUT);
@@ -66,9 +116,27 @@ void setup()
   // Setup SPI for the digital gauges
   SPI.begin();
   SPI.beginTransaction(dgaugesSpi);
+  // ----------------------------
 
-  // Subsystems initialization
+
+  // ---- Subsystems initialization ----
+  
+  // Digital gauges
   dGaugesManagement();
+
+  // LCD Display
+  u8g2.begin();
+  pinMode(LCD_DISPLAY_MODE_UP_PIN, INPUT_PULLUP);
+  pinMode(LCD_DISPLAY_MODE_DOWN_PIN, INPUT_PULLUP);
+  previousApsides_s.periapsis = 0;
+  previousApsides_s.apoapsis = 0;
+  attachInterrupt(digitalPinToInterrupt(LCD_DISPLAY_MODE_UP_PIN), lcdDisplayModeUp, FALLING);
+  attachInterrupt(digitalPinToInterrupt(LCD_DISPLAY_MODE_DOWN_PIN), lcdDisplayModeDown, FALLING);
+  lcdDisplayManagement();
+  // ----------------------------------
+
+
+  // ---- KerbalSimpit initialization ----
 
   // This loop continually attempts to handshake with the plugin.
   // It will keep retrying until it gets a successful handshake.
@@ -76,12 +144,16 @@ void setup()
   {
     delay(100);
   }
+  // Display a message on the LCD display to indicate handshaking is complete.
+  lcdDisplayMode_sb = LCD_DISPLAY_MODE_CONNECTED;
+  lcdDisplayModeChanged_b = 1;
+  lcdDisplayManagement();
 
   // Turn off the built-in LED to indicate handshaking is complete.
   digitalWrite(LED_BUILTIN, LOW);
 
   // Display a message in KSP to indicate handshaking is complete.
-  simpitClient.printToKSP("Connected", PRINT_TO_SCREEN);
+  simpitClient.printToKSP("Launchpad connected", PRINT_TO_SCREEN);
 
   // Sets our callback function. The KerbalSimpit library will
   // call this function every time a packet is received.
@@ -93,7 +165,16 @@ void setup()
 
   // Register Oxidizer channel.
   simpitClient.registerChannel(OX_MESSAGE);
+
+  // Register Apoapsis / Periapsis channel.
+  simpitClient.registerChannel(APSIDES_MESSAGE);
+
+  // Register Altitude channel.
+  simpitClient.registerChannel(ALTITUDE_MESSAGE);
+  // -------------------------------------
 }
+
+dword loopCount_dw = 0;
 
 void loop()
 {
@@ -103,7 +184,11 @@ void loop()
   // subsystems management
   //joystickManagement();
   //throttleManagement();
-  dGaugesManagement();
+  //dGaugesManagement();
+  if(loopCount_dw % 2500 == 0)
+    lcdDisplayManagement();
+
+  loopCount_dw++;
 }
 
 void joystickManagement()
@@ -229,40 +314,301 @@ void dGaugesManagement()
   dGaugeMgmtCallCount++;
 }
 
+void lcdDisplayManagement(void)
+{
+  char lcdLine1_ba[16] = {0};
+  char lcdLine2_ba[16] = {0};
+  if(lcdDisplayModeChanged_b)
+  { 
+    u8g2.clearDisplay();
+    lcdDisplayModeChanged_b = 0;
+  }
+
+  switch (lcdDisplayMode_sb)
+  {
+  case LCD_DISPLAY_MODE_IDLE:
+    do
+    {
+      sprintf(lcdLine1_ba, "KSP Launchpad");
+      sprintf(lcdLine2_ba, "Disconnected");
+      u8g2.setFont(u8g2_font_9x18_tf);
+      u8g2.drawStr(0, 18, lcdLine1_ba);
+      u8g2.setFont(u8g2_font_7x13_tf);
+      u8g2.drawStr(20, 31, lcdLine2_ba);
+    } while (u8g2.nextPage());
+    break;
+
+  case LCD_DISPLAY_MODE_CONNECTED:
+    do
+    {
+      sprintf(lcdLine1_ba, "KSP Launchpad");
+      sprintf(lcdLine2_ba, "Connected");
+      u8g2.setFont(u8g2_font_9x18_tf);
+      u8g2.drawStr(0, 18, lcdLine1_ba);
+      u8g2.setFont(u8g2_font_7x13_tf);
+      u8g2.drawStr(20, 31, lcdLine2_ba);
+    } while (u8g2.nextPage());
+    break;
+
+  case LCD_DISPLAY_MODE_APSIDES:
+    if (apsidesChanged_b)
+    {
+      apoapsis_s.toCharArray(lcdLine1_ba, 16);
+      periapsis_s.toCharArray(lcdLine2_ba, 16);
+
+      do
+      {
+        u8g2.setFont(u8g2_font_8x13_mf);
+
+        u8g2.drawStr(0, 13, lcdLine1_ba);
+        u8g2.drawStr(0, 30, lcdLine2_ba);
+      } while (u8g2.nextPage());
+      apsidesChanged_b = false;
+    }
+
+    break;
+
+  case LCD_DISPLAY_MODE_ALT:
+    if (altitudeChanged_b)
+    {
+      alt_sea_s.toCharArray(lcdLine1_ba, 16);
+      alt_sur_s.toCharArray(lcdLine2_ba, 16);
+
+      do
+      {
+        u8g2.setFont(u8g2_font_8x13_mf);
+
+        u8g2.drawStr(0, 13, lcdLine1_ba);
+        u8g2.drawStr(0, 30, lcdLine2_ba);
+      } while (u8g2.nextPage());
+      altitudeChanged_b = false;
+    }
+    break;
+  
+  default:
+    break;
+  }
+}
+
 void messageHandler(byte messageType, byte msg[], byte msgSize)
 {
   switch (messageType)
   {
-  case SAS_MODE_INFO_MESSAGE:
-    // Checking if the message is the size we expect is a very basic
-    // way to confirm if the message was received properly.
-    if (msgSize == sizeof(SASInfoMessage))
-    {
-      // Create a new SASInfoMessage struct
-      SASInfoMessage sasInfo;
-      // Convert the message we received to an SASInfoMessage struct.
-      sasInfo = parseMessage<SASInfoMessage>(msg);
-      // Turn the LED on if SAS is enabled Otherwise turn it off.
-      if (sasInfo.currentSASMode != 255)
+    case SAS_MODE_INFO_MESSAGE:
+      // Checking if the message is the size we expect is a very basic
+      // way to confirm if the message was received properly.
+      if (msgSize == sizeof(SASInfoMessage))
       {
-        digitalWrite(SAS_LED_PIN, HIGH);
+        // Create a new SASInfoMessage struct
+        SASInfoMessage sasInfo;
+        // Convert the message we received to an SASInfoMessage struct.
+        sasInfo = parseMessage<SASInfoMessage>(msg);
+        // Turn the LED on if SAS is enabled Otherwise turn it off.
+        if (sasInfo.currentSASMode != 255)
+        {
+          digitalWrite(SAS_LED_PIN, HIGH);
+        }
+        else
+        {
+          digitalWrite(SAS_LED_PIN, LOW);
+        }
       }
-      else
-      {
-        digitalWrite(SAS_LED_PIN, LOW);
-      }
-    }
     break;
+
     case OX_MESSAGE:
-    // Checking if the message is the size we expect is a very basic
-    // way to confirm if the message was received properly.
-    if (msgSize == sizeof(resourceMessage))
+      // Checking if the message is the size we expect is a very basic
+      // way to confirm if the message was received properly.
+      if (msgSize == sizeof(resourceMessage))
+      {
+        // Create a new SASInfoMessage struct
+        resourceMessage oxInfo;
+        // Convert the message we received to an resourceMessage struct.
+        oxInfo = parseMessage<resourceMessage>(msg);
+        shipFuelPercent_ba[DGAUGES_OX] = (byte)map(oxInfo.available, 0, oxInfo.total, 0, 100);
+      }
+    break;
+
+    case APSIDES_MESSAGE:
+      // Checking if the message is the size we expect is a very basic
+      // way to confirm if the message was received properly.
+      if (msgSize == sizeof(apsidesMessage))
+      {
+        // Convert the message we received to an apsidesMessage struct.
+        apsidesMessage apsides_s;
+        apsides_s = parseMessage<apsidesMessage>(msg);
+
+        // did the apsides change?
+        if ((apsides_s.apoapsis != previousApsides_s.apoapsis) || (apsides_s.periapsis != previousApsides_s.periapsis))
+        {
+          previousApsides_s.apoapsis = apsides_s.apoapsis;
+          previousApsides_s.periapsis = apsides_s.periapsis;
+
+          String apo_string = "A:";
+          String peri_string = "P:";
+
+          long apoapsis = apsides_s.apoapsis;
+          long periapsis = apsides_s.periapsis;
+
+          if (abs(apoapsis) < 5000)
+          {
+            apoapsis_s = apo_string + apoapsis + "m";
+          }
+          else if ((abs(apoapsis) >= 5000) && (apoapsis < pow(10, 6)))
+          {
+            apoapsis_s = apo_string + apoapsis / pow(10, 3) + "Km";
+          }
+          else
+          {
+            apoapsis_s = apo_string + apoapsis / pow(10, 6) + "Mm";
+          }
+
+          if (abs(periapsis) < 5000)
+          {
+            periapsis_s = peri_string + periapsis + "m";
+          }
+          else if ((abs(periapsis) >= 5000) && (periapsis < pow(10, 6)))
+          {
+            periapsis_s = peri_string + periapsis / pow(10, 3) + "Km";
+          }
+          else
+          {
+            periapsis_s = peri_string + periapsis / pow(10, 6) + "Mm";
+          }
+
+          // fill in the remaining spaces with empty characters to erase the previous text
+          for(int a = 0 ; a < 16 - apoapsis_s.length(); a++)
+          {
+            apoapsis_s += " ";
+          }
+          for(int p = 0 ; p < 16 - periapsis_s.length(); p++)
+          {
+            periapsis_s += " ";
+          }
+
+          apsidesChanged_b = true;
+        }
+      }
+    break;
+
+    case ALTITUDE_MESSAGE:
+      // Checking if the message is the size we expect is a very basic
+      // way to confirm if the message was received properly.
+      if (msgSize == sizeof(altitudeMessage))
+      {
+        // Convert the message we received to an altitudeMessage struct.
+        altitudeMessage altitude_s;
+        altitude_s = parseMessage<altitudeMessage>(msg);
+
+        // did the altitude change?
+        if ((altitude_s.sealevel != previousAltitude_s.sealevel) || (altitude_s.surface != previousAltitude_s.surface))
+        {
+          previousAltitude_s.sealevel = altitude_s.sealevel;
+          previousAltitude_s.surface = altitude_s.surface;
+
+          String altitude_sea_string = "Sea:";
+          String altitude_surface_string = "Gnd:";
+          long alt_sea = altitude_s.sealevel;
+          long alt_sur = altitude_s.surface;
+
+          if (abs(alt_sea) < 5000)
+          {
+            alt_sea_s = altitude_sea_string + alt_sea + "m";
+          }
+          else if ((abs(alt_sea) >= 5000) && (alt_sea < pow(10, 6)))
+          {
+            alt_sea_s = altitude_sea_string + alt_sea / pow(10, 3) + "Km";
+          }
+          else
+          {
+            alt_sea_s = altitude_sea_string + alt_sea / pow(10, 6) + "Mm";
+          }
+
+          if (abs(alt_sur) < 5000)
+          {
+            alt_sur_s = altitude_surface_string + alt_sur + "m";
+          }
+          else if ((abs(alt_sur) >= 5000) && (alt_sur < pow(10, 6)))
+          {
+            alt_sur_s = altitude_surface_string + alt_sur / pow(10, 3) + "Km";
+          }
+          else
+          {
+            alt_sur_s = altitude_surface_string + alt_sur / pow(10, 6) + "Mm";
+          }
+
+          // fill in the remaining spaces with empty characters to erase the previous text
+          for (int a = 0; a < 16 - altitude_sea_string.length(); a++)
+          {
+            alt_sea_s += " ";
+          }
+          for (int p = 0; p < 16 - altitude_surface_string.length(); p++)
+          {
+            alt_sur_s += " ";
+          }
+
+          altitudeChanged_b = true;
+        }
+      }
+    break;
+    default:
+    break;
+  }
+}
+
+void lcdDisplayModeUp(void)
+{
+  static unsigned long last_interrupt_time = 0;
+  unsigned long interrupt_time = millis();
+  // debounce
+  if (interrupt_time - last_interrupt_time > 350)
+  {
+  
+    last_interrupt_time = interrupt_time;
+    lcdDisplayMode_sb++;
+    if (lcdDisplayMode_sb > NB_LCD_DISPLAY_MODES - 1)
     {
-      // Create a new SASInfoMessage struct
-      resourceMessage oxInfo;
-      // Convert the message we received to an resourceMessage struct.
-      oxInfo = parseMessage<resourceMessage>(msg);
-      shipFuelPercent_ba[DGAUGES_OX] = (byte)map(oxInfo.available, 0, oxInfo.total, 0, 100);
+      lcdDisplayMode_sb = 0;
     }
+    if(lcdDisplayMode_sb == LCD_DISPLAY_MODE_APSIDES)
+    {
+      apsidesChanged_b = true;
+    }
+
+    if (lcdDisplayMode_sb == LCD_DISPLAY_MODE_ALT)
+    {
+      altitudeChanged_b = true;
+    }
+
+    lcdDisplayModeChanged_b = 1;
+  }
+}
+
+void lcdDisplayModeDown(void)
+{
+  static unsigned long last_interrupt_time = 0;
+  unsigned long interrupt_time = millis();
+  // debounce
+  if(interrupt_time - last_interrupt_time > 350)
+  {
+    if (lcdDisplayMode_sb == 0)
+    {
+      lcdDisplayMode_sb = NB_LCD_DISPLAY_MODES - 1;
+    }
+    else
+    {
+      lcdDisplayMode_sb--;
+    }
+
+    if (lcdDisplayMode_sb == LCD_DISPLAY_MODE_APSIDES)
+    {
+      apsidesChanged_b = true;
+    }
+
+    if(lcdDisplayMode_sb == LCD_DISPLAY_MODE_ALT)
+    {
+      altitudeChanged_b = true;
+    }
+
+    lcdDisplayModeChanged_b = 1;
   }
 }

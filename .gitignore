@@ -5,15 +5,13 @@ build/
 
 schematics/dgauges-backups/
 
-schematics/fp-info-cache
+**fp-info-cache
 
 schematics/Connectors_JST.pretty-master/
 
 schematics/fab_out/
 
 schematics/mainboard/mainboard-backups/
-
-schematics/mainboard/fp-info-cache
 
 schematics/mainboard/#auto_saved_files#
 
@@ -23,10 +21,11 @@ schematics/dgauges/#auto_saved_files#
 
 schematics/dgauges/dgauges-backups/
 
-schematics/dgauges/fp-info-cache
 
 schematics/mainboard/_autosave-mainboard.kicad_sch
 
 _autosave*
 
 schematics/mainboard/fab/
+
+schematics/lcd/lcd-backups/
