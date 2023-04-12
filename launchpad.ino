@@ -47,6 +47,9 @@ typedef int8_t sbyte;
 //      DGAUGES_DATA_PIN   21 /* DATA/CLK = ATmega2560 SPI */
 //      DGAUGES_CLOCK_PIN  20
 
+// Analog gauge
+#define AGAUGE_EC_PIN      13
+
 // LCD Display
 #define LCD_DISPLAY_CS_PIN          5
 #define LCD_DISPLAY_A0_PIN          7
@@ -70,6 +73,8 @@ KerbalSimpit simpitClient(Serial);
 
 // LCD Display (Hardware SPI, CS=5, A0=7)
 U8G2_ST7565_NHD_C12832_F_4W_HW_SPI u8g2(U8G2_R2, LCD_DISPLAY_CS_PIN, LCD_DISPLAY_A0_PIN);
+char lcdLine1_ba[16] = {0};
+char lcdLine2_ba[16] = {0};
 
 // Create a SPI settings object for the digital gauges
 SPISettings dgaugesSpi(10000000UL, MSBFIRST, SPI_MODE0);
@@ -77,17 +82,14 @@ SPISettings dgaugesSpi(10000000UL, MSBFIRST, SPI_MODE0);
 // ---- Globals ----
 // Ship fuel tanks in percent
 byte shipFuelPercent_ba[NB_DGAUGES] = {0};
+// Ship electric charge percent mapped on a byte (0-100%/0-255)
+byte shipECPercent_b = 0;
 // LCD display mode
 sbyte lcdDisplayMode_sb = LCD_DISPLAY_MODE_IDLE;
-byte lcdDisplayModeChanged_b = 0;
 // Ship apsides
-apsidesMessage previousApsides_s;
-byte apsidesChanged_b = 0;
 String periapsis_s;
 String apoapsis_s;
 // Ship altitude
-altitudeMessage previousAltitude_s;
-byte altitudeChanged_b = 0;
 String alt_sea_s;
 String alt_sur_s;
 // -----------------
@@ -100,36 +102,39 @@ void setup()
 
   // ---- IO initialization ----
 
-  // Set up the build in LED, and turn it on.
+  // Setup the build in LED, and turn it on.
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
 
-  // Set up the RCS and SAS LEDs.
+  // Setup the RCS and SAS LEDs.
   pinMode(RCS_LED_PIN, OUTPUT);
   digitalWrite(RCS_LED_PIN, LOW);
   pinMode(SAS_LED_PIN, OUTPUT);
   digitalWrite(SAS_LED_PIN, LOW);
 
+  // Setup digital gauges latch pin
   pinMode(DGAUGES_LATCH_PIN, OUTPUT);
   digitalWrite(DGAUGES_LATCH_PIN, HIGH);
 
-  // Setup SPI for the digital gauges
+  // Setup SPI for the digital gauges / LCD display
   SPI.begin();
   SPI.beginTransaction(dgaugesSpi);
+
+  // Setup analog gauge
+  pinMode(AGAUGE_EC_PIN, OUTPUT);
   // ----------------------------
 
 
   // ---- Subsystems initialization ----
   
-  // Digital gauges
-  dGaugesManagement();
+  // Gauges init
+  //dGaugesManagement();
+  aGaugeManagement();
 
-  // LCD Display
+  // LCD Display init
   u8g2.begin();
   pinMode(LCD_DISPLAY_MODE_UP_PIN, INPUT_PULLUP);
   pinMode(LCD_DISPLAY_MODE_DOWN_PIN, INPUT_PULLUP);
-  previousApsides_s.periapsis = 0;
-  previousApsides_s.apoapsis = 0;
   attachInterrupt(digitalPinToInterrupt(LCD_DISPLAY_MODE_UP_PIN), lcdDisplayModeUp, FALLING);
   attachInterrupt(digitalPinToInterrupt(LCD_DISPLAY_MODE_DOWN_PIN), lcdDisplayModeDown, FALLING);
   lcdDisplayManagement();
@@ -145,8 +150,7 @@ void setup()
     delay(100);
   }
   // Display a message on the LCD display to indicate handshaking is complete.
-  lcdDisplayMode_sb = LCD_DISPLAY_MODE_CONNECTED;
-  lcdDisplayModeChanged_b = 1;
+  lcdDisplayMode_sb = LCD_DISPLAY_MODE_APSIDES;
   lcdDisplayManagement();
 
   // Turn off the built-in LED to indicate handshaking is complete.
@@ -159,8 +163,7 @@ void setup()
   // call this function every time a packet is received.
   simpitClient.inboundHandler(messageHandler);
 
-  // Register Altitude channel.
-
+  // Register SAS Mode channel.
   simpitClient.registerChannel(SAS_MODE_INFO_MESSAGE);
 
   // Register Oxidizer channel.
@@ -171,6 +174,9 @@ void setup()
 
   // Register Altitude channel.
   simpitClient.registerChannel(ALTITUDE_MESSAGE);
+
+  // Register Electric charge channel.
+  simpitClient.registerChannel(ELECTRIC_MESSAGE);
   // -------------------------------------
 }
 
@@ -185,6 +191,7 @@ void loop()
   //joystickManagement();
   //throttleManagement();
   //dGaugesManagement();
+  aGaugeManagement();
   if(loopCount_dw % 2500 == 0)
     lcdDisplayManagement();
 
@@ -316,78 +323,52 @@ void dGaugesManagement()
 
 void lcdDisplayManagement(void)
 {
-  char lcdLine1_ba[16] = {0};
-  char lcdLine2_ba[16] = {0};
-  if(lcdDisplayModeChanged_b)
-  { 
-    u8g2.clearDisplay();
-    lcdDisplayModeChanged_b = 0;
-  }
+  u8g2.clearBuffer();
 
   switch (lcdDisplayMode_sb)
   {
   case LCD_DISPLAY_MODE_IDLE:
-    do
-    {
-      sprintf(lcdLine1_ba, "KSP Launchpad");
-      sprintf(lcdLine2_ba, "Disconnected");
-      u8g2.setFont(u8g2_font_9x18_tf);
-      u8g2.drawStr(0, 18, lcdLine1_ba);
-      u8g2.setFont(u8g2_font_7x13_tf);
-      u8g2.drawStr(20, 31, lcdLine2_ba);
-    } while (u8g2.nextPage());
+    sprintf(lcdLine1_ba, "KSP Launchpad");
+    sprintf(lcdLine2_ba, "Disconnected");
+
+    u8g2.setFont(u8g2_font_9x18_tf);
+    u8g2.drawStr(0, 18, lcdLine1_ba);
+    u8g2.setFont(u8g2_font_7x13_tf);
+    u8g2.drawStr(20, 31, lcdLine2_ba);
     break;
 
   case LCD_DISPLAY_MODE_CONNECTED:
-    do
-    {
-      sprintf(lcdLine1_ba, "KSP Launchpad");
-      sprintf(lcdLine2_ba, "Connected");
-      u8g2.setFont(u8g2_font_9x18_tf);
-      u8g2.drawStr(0, 18, lcdLine1_ba);
-      u8g2.setFont(u8g2_font_7x13_tf);
-      u8g2.drawStr(20, 31, lcdLine2_ba);
-    } while (u8g2.nextPage());
+    sprintf(lcdLine1_ba, "KSP Launchpad");
+    sprintf(lcdLine2_ba, "Connected");
+
+    u8g2.setFont(u8g2_font_9x18_tf);
+    u8g2.drawStr(0, 18, lcdLine1_ba);
+    u8g2.setFont(u8g2_font_7x13_tf);
+    u8g2.drawStr(20, 31, lcdLine2_ba);
     break;
 
   case LCD_DISPLAY_MODE_APSIDES:
-    if (apsidesChanged_b)
-    {
-      apoapsis_s.toCharArray(lcdLine1_ba, 16);
-      periapsis_s.toCharArray(lcdLine2_ba, 16);
+    apoapsis_s.toCharArray(lcdLine1_ba, 16);
+    periapsis_s.toCharArray(lcdLine2_ba, 16);
 
-      do
-      {
-        u8g2.setFont(u8g2_font_8x13_mf);
-
-        u8g2.drawStr(0, 13, lcdLine1_ba);
-        u8g2.drawStr(0, 30, lcdLine2_ba);
-      } while (u8g2.nextPage());
-      apsidesChanged_b = false;
-    }
-
+    u8g2.setFont(u8g2_font_8x13_mf);
+    u8g2.drawStr(0, 13, lcdLine1_ba);
+    u8g2.drawStr(0, 30, lcdLine2_ba);
     break;
 
   case LCD_DISPLAY_MODE_ALT:
-    if (altitudeChanged_b)
-    {
-      alt_sea_s.toCharArray(lcdLine1_ba, 16);
-      alt_sur_s.toCharArray(lcdLine2_ba, 16);
+    alt_sea_s.toCharArray(lcdLine1_ba, 16);
+    alt_sur_s.toCharArray(lcdLine2_ba, 16);
 
-      do
-      {
-        u8g2.setFont(u8g2_font_8x13_mf);
-
-        u8g2.drawStr(0, 13, lcdLine1_ba);
-        u8g2.drawStr(0, 30, lcdLine2_ba);
-      } while (u8g2.nextPage());
-      altitudeChanged_b = false;
-    }
+    u8g2.setFont(u8g2_font_8x13_mf);
+    u8g2.drawStr(0, 13, lcdLine1_ba);
+    u8g2.drawStr(0, 30, lcdLine2_ba);
     break;
   
   default:
     break;
   }
+  u8g2.sendBuffer();
 }
 
 void messageHandler(byte messageType, byte msg[], byte msgSize)
@@ -420,13 +401,26 @@ void messageHandler(byte messageType, byte msg[], byte msgSize)
       // way to confirm if the message was received properly.
       if (msgSize == sizeof(resourceMessage))
       {
-        // Create a new SASInfoMessage struct
+        // Create a new resourceMessage struct
         resourceMessage oxInfo;
         // Convert the message we received to an resourceMessage struct.
         oxInfo = parseMessage<resourceMessage>(msg);
         shipFuelPercent_ba[DGAUGES_OX] = (byte)map(oxInfo.available, 0, oxInfo.total, 0, 100);
       }
     break;
+
+    case ELECTRIC_MESSAGE:
+      // Checking if the message is the size we expect is a very basic
+      // way to confirm if the message was received properly.
+      if (msgSize == sizeof(resourceMessage))
+      {
+        // Create a new resourceMessage struct
+        resourceMessage electricInfo;
+        // Convert the message we received to an resourceMessage struct.
+        electricInfo = parseMessage<resourceMessage>(msg);
+        shipECPercent_b = (byte)map(electricInfo.available, 0, electricInfo.total, 0, 255);
+      }
+      break;
 
     case APSIDES_MESSAGE:
       // Checking if the message is the size we expect is a very basic
@@ -437,55 +431,36 @@ void messageHandler(byte messageType, byte msg[], byte msgSize)
         apsidesMessage apsides_s;
         apsides_s = parseMessage<apsidesMessage>(msg);
 
-        // did the apsides change?
-        if ((apsides_s.apoapsis != previousApsides_s.apoapsis) || (apsides_s.periapsis != previousApsides_s.periapsis))
+        String apo_string = "A:";
+        String peri_string = "P:";
+
+        float apoapsis = apsides_s.apoapsis;
+        float periapsis = apsides_s.periapsis;
+
+        if (abs(apoapsis) < 5000)
         {
-          previousApsides_s.apoapsis = apsides_s.apoapsis;
-          previousApsides_s.periapsis = apsides_s.periapsis;
+          apoapsis_s = apo_string + apoapsis + "m";
+        }
+        else if ((abs(apoapsis) >= 5000) && (apoapsis < pow(10, 6)))
+        {
+          apoapsis_s = apo_string + apoapsis / pow(10, 3) + "Km";
+        }
+        else
+        {
+          apoapsis_s = apo_string + apoapsis / pow(10, 6) + "Mm";
+        }
 
-          String apo_string = "A:";
-          String peri_string = "P:";
-
-          long apoapsis = apsides_s.apoapsis;
-          long periapsis = apsides_s.periapsis;
-
-          if (abs(apoapsis) < 5000)
-          {
-            apoapsis_s = apo_string + apoapsis + "m";
-          }
-          else if ((abs(apoapsis) >= 5000) && (apoapsis < pow(10, 6)))
-          {
-            apoapsis_s = apo_string + apoapsis / pow(10, 3) + "Km";
-          }
-          else
-          {
-            apoapsis_s = apo_string + apoapsis / pow(10, 6) + "Mm";
-          }
-
-          if (abs(periapsis) < 5000)
-          {
-            periapsis_s = peri_string + periapsis + "m";
-          }
-          else if ((abs(periapsis) >= 5000) && (periapsis < pow(10, 6)))
-          {
-            periapsis_s = peri_string + periapsis / pow(10, 3) + "Km";
-          }
-          else
-          {
-            periapsis_s = peri_string + periapsis / pow(10, 6) + "Mm";
-          }
-
-          // fill in the remaining spaces with empty characters to erase the previous text
-          for(int a = 0 ; a < 16 - apoapsis_s.length(); a++)
-          {
-            apoapsis_s += " ";
-          }
-          for(int p = 0 ; p < 16 - periapsis_s.length(); p++)
-          {
-            periapsis_s += " ";
-          }
-
-          apsidesChanged_b = true;
+        if (abs(periapsis) < 5000)
+        {
+          periapsis_s = peri_string + periapsis + "m";
+        }
+        else if ((abs(periapsis) >= 5000) && (periapsis < pow(10, 6)))
+        {
+          periapsis_s = peri_string + periapsis / pow(10, 3) + "Km";
+        }
+        else
+        {
+          periapsis_s = peri_string + periapsis / pow(10, 6) + "Mm";
         }
       }
     break;
@@ -499,54 +474,35 @@ void messageHandler(byte messageType, byte msg[], byte msgSize)
         altitudeMessage altitude_s;
         altitude_s = parseMessage<altitudeMessage>(msg);
 
-        // did the altitude change?
-        if ((altitude_s.sealevel != previousAltitude_s.sealevel) || (altitude_s.surface != previousAltitude_s.surface))
+        String altitude_sea_string = "Sea:";
+        String altitude_surface_string = "Gnd:";
+        float alt_sea = altitude_s.sealevel;
+        float alt_sur = altitude_s.surface;
+
+        if (abs(alt_sea) < 5000)
         {
-          previousAltitude_s.sealevel = altitude_s.sealevel;
-          previousAltitude_s.surface = altitude_s.surface;
+          alt_sea_s = altitude_sea_string + alt_sea + "m";
+        }
+        else if ((abs(alt_sea) >= 5000) && (alt_sea < pow(10, 6)))
+        {
+          alt_sea_s = altitude_sea_string + alt_sea / pow(10, 3) + "Km";
+        }
+        else
+        {
+          alt_sea_s = altitude_sea_string + alt_sea / pow(10, 6) + "Mm";
+        }
 
-          String altitude_sea_string = "Sea:";
-          String altitude_surface_string = "Gnd:";
-          long alt_sea = altitude_s.sealevel;
-          long alt_sur = altitude_s.surface;
-
-          if (abs(alt_sea) < 5000)
-          {
-            alt_sea_s = altitude_sea_string + alt_sea + "m";
-          }
-          else if ((abs(alt_sea) >= 5000) && (alt_sea < pow(10, 6)))
-          {
-            alt_sea_s = altitude_sea_string + alt_sea / pow(10, 3) + "Km";
-          }
-          else
-          {
-            alt_sea_s = altitude_sea_string + alt_sea / pow(10, 6) + "Mm";
-          }
-
-          if (abs(alt_sur) < 5000)
-          {
-            alt_sur_s = altitude_surface_string + alt_sur + "m";
-          }
-          else if ((abs(alt_sur) >= 5000) && (alt_sur < pow(10, 6)))
-          {
-            alt_sur_s = altitude_surface_string + alt_sur / pow(10, 3) + "Km";
-          }
-          else
-          {
-            alt_sur_s = altitude_surface_string + alt_sur / pow(10, 6) + "Mm";
-          }
-
-          // fill in the remaining spaces with empty characters to erase the previous text
-          for (int a = 0; a < 16 - altitude_sea_string.length(); a++)
-          {
-            alt_sea_s += " ";
-          }
-          for (int p = 0; p < 16 - altitude_surface_string.length(); p++)
-          {
-            alt_sur_s += " ";
-          }
-
-          altitudeChanged_b = true;
+        if (abs(alt_sur) < 5000)
+        {
+          alt_sur_s = altitude_surface_string + alt_sur + "m";
+        }
+        else if ((abs(alt_sur) >= 5000) && (alt_sur < pow(10, 6)))
+        {
+          alt_sur_s = altitude_surface_string + alt_sur / pow(10, 3) + "Km";
+        }
+        else
+        {
+          alt_sur_s = altitude_surface_string + alt_sur / pow(10, 6) + "Mm";
         }
       }
     break;
@@ -562,24 +518,12 @@ void lcdDisplayModeUp(void)
   // debounce
   if (interrupt_time - last_interrupt_time > 350)
   {
-  
     last_interrupt_time = interrupt_time;
     lcdDisplayMode_sb++;
     if (lcdDisplayMode_sb > NB_LCD_DISPLAY_MODES - 1)
     {
       lcdDisplayMode_sb = 0;
     }
-    if(lcdDisplayMode_sb == LCD_DISPLAY_MODE_APSIDES)
-    {
-      apsidesChanged_b = true;
-    }
-
-    if (lcdDisplayMode_sb == LCD_DISPLAY_MODE_ALT)
-    {
-      altitudeChanged_b = true;
-    }
-
-    lcdDisplayModeChanged_b = 1;
   }
 }
 
@@ -598,17 +542,10 @@ void lcdDisplayModeDown(void)
     {
       lcdDisplayMode_sb--;
     }
-
-    if (lcdDisplayMode_sb == LCD_DISPLAY_MODE_APSIDES)
-    {
-      apsidesChanged_b = true;
-    }
-
-    if(lcdDisplayMode_sb == LCD_DISPLAY_MODE_ALT)
-    {
-      altitudeChanged_b = true;
-    }
-
-    lcdDisplayModeChanged_b = 1;
   }
+}
+
+void aGaugeManagement(void)
+{
+  analogWrite(AGAUGE_EC_PIN, shipECPercent_b);
 }

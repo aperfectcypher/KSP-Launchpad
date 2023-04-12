@@ -29,3 +29,5 @@ _autosave*
 schematics/mainboard/fab/
 
 schematics/lcd/lcd-backups/
+
+schematics/lcd/fab/
