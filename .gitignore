@@ -31,3 +31,9 @@ schematics/mainboard/fab/
 schematics/lcd/lcd-backups/
 
 schematics/lcd/fab/
+
+panels/controls/fab/
+
+panels/controls/controls-backups/
+
+panels/sas/sas-backups/
