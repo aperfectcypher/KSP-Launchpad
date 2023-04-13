@@ -29,21 +29,25 @@ typedef int8_t sbyte;
 
 // Throttle
 #define THROTTLE_PIN       PIN_A7
+#define THROTTLE_MOT_FWD_PIN   11
+#define THROTTLE_MOT_REV_PIN   12
+#define THROTTLE_TOUCH0_PIN    40
+#define THROTTLE_TOUCH1_PIN    41
 
 // Joystick 1
 #define JOY1_X_PIN         PIN_A1
 #define JOY1_Y_PIN         PIN_A2
 #define JOY1_Z_PIN         PIN_A3
-#define JOY1_PB_PIN        5
+#define JOY1_PB_PIN        22
 
 // Joystick 2
 #define JOY2_X_PIN         PIN_A4
 #define JOY2_Y_PIN         PIN_A5
 #define JOY2_Z_PIN         PIN_A6
-#define JOY2_PB_PIN        6
+#define JOY2_PB_PIN        23
 
 // Digital gauges
-#define DGAUGES_LATCH_PIN 8
+#define DGAUGES_LATCH_PIN  34
 //      DGAUGES_DATA_PIN   21 /* DATA/CLK = ATmega2560 SPI */
 //      DGAUGES_CLOCK_PIN  20
 
@@ -51,12 +55,14 @@ typedef int8_t sbyte;
 #define AGAUGE_EC_PIN      13
 
 // LCD Display
-#define LCD_DISPLAY_CS_PIN          5
-#define LCD_DISPLAY_A0_PIN          7
+#define LCD_DISPLAY_CS_PIN          36
+#define LCD_DISPLAY_A0_PIN          37
+#define LCD_DISPLAY_OE_PIN          38
+//      LCD_DISPLAY_SDA_PIN         21 /* DATA/CLK = ATmega2560 SPI */
+//      LCD_DISPLAY_SCL_PIN         20
 #define LCD_DISPLAY_MODE_UP_PIN     2
 #define LCD_DISPLAY_MODE_DOWN_PIN   3
 // -------------------------------
-
 
 // -----------Settings-----------
 // Joystick
