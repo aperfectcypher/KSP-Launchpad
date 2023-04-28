@@ -43,3 +43,7 @@ panels/executive/executive-backups/
 panels/gauges/gauges-backups/
 
 schematics/lcd/#auto_saved_files#
+
+schematics/mainboard/jlcpcb/gerber/
+
+schematics/mainboard/jlcpcb/production_files/
