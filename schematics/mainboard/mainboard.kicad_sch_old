@@ -8447,7 +8447,7 @@
     (property "Value" "FT232RL" (at 385.445 249.555 0)
       (effects (font (size 1.27 1.27)) (justify right))
     )
-    (property "Footprint" "Package_DFN_QFN:HVQFN-32-1EP_5x5mm_P0.5mm_EP3.1x3.1mm" (at 372.745 295.91 0)
+    (property "Footprint" "Package_SO:SSOP-28_3.9x9.9mm_P0.635mm" (at 372.745 295.91 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT232R.pdf" (at 400.685 273.05 0)
