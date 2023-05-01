@@ -1,6 +1,7 @@
 #include "KerbalSimpit.h"
 #include <SPI.h>
 #include <U8g2lib.h>
+#include <CapacitiveSensor.h>
 
 // ============Defines============
 
@@ -28,11 +29,14 @@ typedef int8_t sbyte;
 #define SAS_LED_PIN       31
 
 // Throttle
-#define THROTTLE_PIN       PIN_A7
-#define THROTTLE_MOT_FWD_PIN   11
-#define THROTTLE_MOT_REV_PIN   12
-#define THROTTLE_TOUCH0_PIN    40
-#define THROTTLE_TOUCH1_PIN    41
+#define THROTTLE_INPUT_PIN         PIN_A7
+#define THROTTLE_MOT_FWD_PIN       11
+#define THROTTLE_MOT_REV_PIN       12
+#define THROTTLE_TOUCH_SEND_PIN    51
+#define THROTTLE_TOUCH_RECV_PIN    52
+/* PLACEHOLDER TODO CORRECT PIN & NAME */
+#define pb1                        24
+#define pb2                        25
 
 // Joystick 1
 #define JOY1_X_PIN         PIN_A1
@@ -71,6 +75,10 @@ typedef int8_t sbyte;
 // Digital gauges
 #define NB_DGAUGES 1
 #define DGAUGES_OX 0
+
+// Throttle
+#define THROTTLE_MOT_TORQUE 255u // 0-255, pwm value
+#define THROTTLE_TOUCH_THRESHOLD 35u
 // ------------------------------
 
 // Declare a KerbalSimpit object that will
@@ -85,6 +93,9 @@ char lcdLine2_ba[16] = {0};
 // Create a SPI settings object for the digital gauges
 SPISettings dgaugesSpi(10000000UL, MSBFIRST, SPI_MODE0);
 
+// Create a CapacitiveSensor object for the throttle
+CapacitiveSensor throttleTouchSensor(THROTTLE_TOUCH_SEND_PIN, THROTTLE_TOUCH_RECV_PIN);
+
 // ---- Globals ----
 // Ship fuel tanks in percent
 byte shipFuelPercent_ba[NB_DGAUGES] = {0};
@@ -98,8 +109,11 @@ String apoapsis_s;
 // Ship altitude
 String alt_sea_s;
 String alt_sur_s;
+// Throttle motor target: -1 = no action, 0-1024 = target position
+sword throttle_motorTarget_sw = -1;
+word throttle_sliderMax_w = 1023;
+word throttle_sliderMin_w = 0;
 // -----------------
-
 
 void setup()
 {
@@ -121,6 +135,14 @@ void setup()
   // Setup digital gauges latch pin
   pinMode(DGAUGES_LATCH_PIN, OUTPUT);
   digitalWrite(DGAUGES_LATCH_PIN, HIGH);
+
+  // Setup throttle motor pins
+  pinMode(THROTTLE_MOT_FWD_PIN, OUTPUT);
+  pinMode(THROTTLE_MOT_REV_PIN, OUTPUT);
+  pinMode(THROTTLE_INPUT_PIN, INPUT);
+  /* DEBUG TODO RM*/
+  pinMode(pb1, INPUT);
+  pinMode(pb2, INPUT);
 
   // Setup SPI for the digital gauges / LCD display
   SPI.begin();
@@ -146,6 +168,8 @@ void setup()
   lcdDisplayManagement();
   // ----------------------------------
 
+  // Throttle motor init
+  throttleCalibration();
 
   // ---- KerbalSimpit initialization ----
 
@@ -183,6 +207,9 @@ void setup()
 
   // Register Electric charge channel.
   simpitClient.registerChannel(ELECTRIC_MESSAGE);
+
+  // Register Scene change channel.
+  //simpitClient.registerChannel(SCENE_CHANGE_MESSAGE);
   // -------------------------------------
 }
 
@@ -195,7 +222,7 @@ void loop()
   
   // subsystems management
   //joystickManagement();
-  //throttleManagement();
+  throttleManagement();
   //dGaugesManagement();
   aGaugeManagement();
   if(loopCount_dw % 2500 == 0)
@@ -245,13 +272,82 @@ void joystickManagement()
 void throttleManagement()
 {
   throttleMessage throttleMsg;
-
+  
   // Read the throttle position from the potentiometer.
-  int throttleRead = analogRead(THROTTLE_PIN);
+  word throttleRead_w = analogRead(THROTTLE_INPUT_PIN);
   // Scale the throttle value to the range of a signed 16-bit integer.
-  throttleMsg.throttle = map(throttleRead, 0, 1023, 0, INT16_MAX);
+  throttleMsg.throttle = map(throttleRead_w, 0, 1023, 0, INT16_MAX);
   // Send the message
   simpitClient.send(THROTTLE_MESSAGE, throttleMsg);
+
+  // Throttle motor management
+  if (digitalRead(pb1) == HIGH)
+  {
+    throttle_motorTarget_sw = throttle_sliderMax_w;
+  }
+  else if (digitalRead(pb2) == HIGH)
+  {
+    throttle_motorTarget_sw = throttle_sliderMin_w;
+  }
+
+  // Capacitive touch safety
+  long cap = throttleTouchSensor.capacitiveSensor(30);
+  if (cap >= THROTTLE_TOUCH_THRESHOLD)
+  {
+    // Turn off motor
+    analogWrite(THROTTLE_MOT_FWD_PIN, LOW);
+    analogWrite(THROTTLE_MOT_REV_PIN, LOW);
+    throttle_motorTarget_sw = -1;
+  }
+
+  if(throttle_motorTarget_sw != -1)
+  {
+    if(throttleRead_w != throttle_motorTarget_sw)
+    {
+      if (throttleRead_w > throttle_motorTarget_sw)
+      {
+        analogWrite(THROTTLE_MOT_FWD_PIN, LOW);
+        analogWrite(THROTTLE_MOT_REV_PIN, THROTTLE_MOT_TORQUE);
+      }
+      else
+      {
+        analogWrite(THROTTLE_MOT_FWD_PIN, THROTTLE_MOT_TORQUE);
+        analogWrite(THROTTLE_MOT_REV_PIN, LOW);
+      }
+    }
+    else
+    {
+      // Turn off motor
+      analogWrite(THROTTLE_MOT_FWD_PIN, LOW);
+      analogWrite(THROTTLE_MOT_REV_PIN, LOW);
+      throttle_motorTarget_sw = -1;
+    }
+  }
+}
+
+void throttleCalibration()
+{
+  // Set the capacitive touch sensor to never re-calibrate.
+  throttleTouchSensor.set_CS_AutocaL_Millis(0xFFFFFFFF);
+  throttleTouchSensor.set_CS_Timeout_Millis(10);
+
+  // Move the throttle to the maximum position.
+  analogWrite(THROTTLE_MOT_FWD_PIN, THROTTLE_MOT_TORQUE);
+  analogWrite(THROTTLE_MOT_REV_PIN, LOW);
+  // Wait for the throttle to reach the maximum position.
+  delay(350u);
+  // Read the throttle position from the potentiometer.
+  throttle_sliderMax_w = analogRead(THROTTLE_INPUT_PIN);
+  // Move the throttle to the minimum position.
+  analogWrite(THROTTLE_MOT_FWD_PIN, LOW);
+  analogWrite(THROTTLE_MOT_REV_PIN, THROTTLE_MOT_TORQUE);
+  // Wait for the throttle to reach the minimum position.
+  delay(350u);
+  // Read the throttle position from the potentiometer.
+  throttle_sliderMin_w = analogRead(THROTTLE_INPUT_PIN);
+  // Turn off the motor.
+  analogWrite(THROTTLE_MOT_FWD_PIN, LOW);
+  analogWrite(THROTTLE_MOT_REV_PIN, LOW);
 }
 
 #define DGAUGE_NORMAL 0
@@ -259,8 +355,8 @@ void throttleManagement()
 #define DGAUGE_DIM    2
 #define DGAUGE_OFF    3
 
-// Digital gauges management
-void dGaugesManagement()
+    // Digital gauges management
+    void dGaugesManagement()
 {
   static word dGaugeMgmtCallCount = 0;
   byte dgaugeMode_ba[NB_DGAUGES] = {DGAUGE_NORMAL};
