@@ -15,10 +15,8 @@ typedef int8_t sbyte;
 
 // LCD display modes
 #define NB_LCD_DISPLAY_MODES          2
-
 #define LCD_DISPLAY_MODE_IDLE         -1
 #define LCD_DISPLAY_MODE_CONNECTED    -2
-
 #define LCD_DISPLAY_MODE_APSIDES      0
 #define LCD_DISPLAY_MODE_ALT          1
 
@@ -61,7 +59,6 @@ typedef int8_t sbyte;
 // LCD Display
 #define LCD_DISPLAY_CS_PIN          36
 #define LCD_DISPLAY_A0_PIN          37
-#define LCD_DISPLAY_OE_PIN          38
 //      LCD_DISPLAY_SDA_PIN         21 /* DATA/CLK = ATmega2560 SPI */
 //      LCD_DISPLAY_SCL_PIN         20
 #define LCD_DISPLAY_MODE_UP_PIN     2
